@@ -1,4 +1,4 @@
-# QEDSeminar2024
+# QED-Seminar 2024
 
 ## Editoren
 
