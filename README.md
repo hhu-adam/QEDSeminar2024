@@ -13,13 +13,8 @@ Kurze Dateien lassen sich einfach durch Kopieren und Versenden der URL teilen. L
 
 ### Lokale Installation
 
-Um an Projekten zu arbeiten, die aus mehreren Dateien bestehen, kommt man meist an einer lokalen Installation von Lean nicht herum.  Der Editor mit der besten Unterstützung für die Entwicklung in Lean ist VS Code.  Die Installation von Lean und VS Code wird in folgender Installationsanleitung beschrieben:
-
-https://leanprover-community.github.io/get_started.html
-
-Nach erfolgreicher Installation ist der nächste Schritt, ein Projekt zu initialisieren:
-
-https://leanprover-community.github.io/install/project.html
+Um an Projekten zu arbeiten, die aus mehreren Dateien bestehen, kommt man meist an einer lokalen Installation von Lean nicht herum.  Der Editor mit der besten Unterstützung für die Entwicklung in Lean ist VS Code.  Auf der Leanprover-Community-Seite gibt es für Lean und VS Code eine [Installationsanleitung](https://leanprover-community.github.io/get_started.html). 
+Nach erfolgreicher Installation ist der nächste Schritt, ein [Projekt zu initialisieren](https://leanprover-community.github.io/install/project.html).
 
 
 ## Hilfe
