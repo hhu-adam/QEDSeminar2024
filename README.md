@@ -14,8 +14,7 @@ Kurze Dateien lassen sich einfach durch Kopieren und Versenden der URL teilen. L
 ### Lokale Installation
 
 Um an Projekten zu arbeiten, die aus mehreren Dateien bestehen, kommt man meist an einer lokalen Installation von Lean nicht herum.  Der Editor mit der besten Unterstützung für die Entwicklung in Lean ist VS Code.  Auf der Leanprover-Community-Seite gibt es für Lean und VS Code eine [Installationsanleitung](https://leanprover-community.github.io/get_started.html). 
-Nach erfolgreicher Installation ist der nächste Schritt, ein [Projekt zu initialisieren](https://leanprover-community.github.io/install/project.html).
-
+Nach erfolgreicher Installation ist der nächste Schritt, ein [Projekt zu initialisieren](https://leanprover-community.github.io/install/project.html), z.B. durch Klonen dieses Repositories.
 
 ## Hilfe
 
@@ -25,7 +24,6 @@ Nach erfolgreicher Installation ist der nächste Schritt, ein [Projekt zu initia
 - [Martin Dvorak's Cheat Sheet](https://github.com/madvorak/lean4-tactics)
 
 Die Taktik-Varianten mit Fragezeichen (`simp?`, `exact?`, `apply?`, `rw?`) kamen im Spiel nicht vor, sind aber sehr nützlich – einfach mal ausprobieren!  Auch `aesop?` kann Beweise abkürzen.
-
 
 ### mathlib-Bibliothek
 
@@ -40,3 +38,12 @@ Loogle versteht `->` und `<->` anstelle von `→` und `↔`.  Um Suchanfragen mi
 
 Es gibt eine sehr freundliche weltweite [Lean/mathlib-Community](https://leanprover.zulipchat.com/), die rund um die Uhr Fragen beantwortet.  Um Fragen zu stellen, muss man sich allerdings zunächst einen Account auf Zulip zulegen.  Die erste Anlaufstelle ist dann der [`new members`-Kanal](https://leanprover.zulipchat.com/#narrow/stream/113489-new-members).
 
+
+
+## Los geht's …
+
+Wir wollen uns im zweiten Teil des Seminars elementarer Analysis zuwenden.  Um die Formulierung von Analysis in mathlib nachvollziehen zu können, benötigen wir das das Konzept eines *Filters*.  Dazu:
+
+- das Topologie-Kapitel in [Mathematics in Lean](https://leanprover-community.github.io/mathematics_in_lean/C09_Topology.html)
+- ein [hilfreiches Bild](https://commons.wikimedia.org/wiki/File:Filter_vs_ultrafilter.svg) auf Wikipedia
+- ein [kleines Tutorium](https://github.com/hhu-adam/QEDSeminar2024/blob/main/QEDSeminar2024/Tutorial_Filters.lean) in diesem repository ([Web-Editor](https://lean.math.hhu.de/#url=https%3A%2F%2Fraw.githubusercontent.com%2Fhhu-adam%2FQEDSeminar2024%2F9092b553793e6a005db3439d47acf1705620ac05%2FQEDSeminar2024%2FTutorial_Filters.lean))
