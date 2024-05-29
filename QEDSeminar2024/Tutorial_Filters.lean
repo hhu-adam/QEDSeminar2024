@@ -135,11 +135,15 @@ example {X Y : Type*} (f : X → Y) : Filter X → Filter Y :=
 
 example {X Y : Type*} (f : X → Y) (F : Filter X) (V : Set Y) :
     V ∈ Filter.map f F ↔ f ⁻¹' V ∈ F := by
-  rfl
+    rfl
 
 /- the *pullback* of filters generalizes preimages -/
 example {X Y : Type*} (f : X → Y) : Filter Y → Filter X :=
   Filter.comap f
+
+example {X Y : Type*} (f : X → Y) (U : Set X) (F : Filter Y) :
+    U ∈ Filter.comap f F ↔ ∃ V : F.sets, f ⁻¹' V ⊆ U := by
+    simp_all only [mem_comap, Subtype.exists, Filter.mem_sets, exists_prop]
 
 /- `Filter X` has an order that turns it into a complete lattice.
 The order is reverse inclusion.
