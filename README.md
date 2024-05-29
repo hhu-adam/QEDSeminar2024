@@ -46,4 +46,4 @@ Wir wollen uns im zweiten Teil des Seminars elementarer Analysis zuwenden.  Um d
 
 - das Topologie-Kapitel in [Mathematics in Lean](https://leanprover-community.github.io/mathematics_in_lean/C09_Topology.html)
 - ein [hilfreiches Bild](https://commons.wikimedia.org/wiki/File:Filter_vs_ultrafilter.svg) auf Wikipedia
-- ein [kleines Tutorium](https://github.com/hhu-adam/QEDSeminar2024/blob/main/QEDSeminar2024/Tutorial_Filters.lean) in diesem repository ([Web-Editor](https://lean.math.hhu.de/#url=https%3A%2F%2Fraw.githubusercontent.com%2Fhhu-adam%2FQEDSeminar2024%2F9092b553793e6a005db3439d47acf1705620ac05%2FQEDSeminar2024%2FTutorial_Filters.lean))
+- ein [kleines Tutorium](https://github.com/hhu-adam/QEDSeminar2024/blob/main/QEDSeminar2024/Tutorial_Filters.lean) in diesem repository ([Web-Editor](https://lean.math.hhu.de/#url=https%3A%2F%2Fraw.githubusercontent.com%2Fhhu-adam%2FQEDSeminar2024%2Fmain%2FQEDSeminar2024%2FTutorial_Filters.lean))
