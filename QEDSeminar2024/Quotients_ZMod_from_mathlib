@@ -1,0 +1,27 @@
+import Mathlib
+-- import Mathlib.Data.ZMod.Defs
+-- import Mathlib.Algebra.CharP.Defs
+
+variable (n : ℕ) 
+
+example : (n : ZMod n) = 0 := by
+  apply CharP.cast_eq_zero
+
+example (a : ZMod 12) : a + 12 = a := by
+  have h: (12 : ZMod 12) = 0 := by
+    apply CharP.cast_eq_zero
+  rw [h]  
+  ring
+
+example (a : ZMod n) : a + n = a := by
+  simp only [CharP.cast_eq_zero, add_zero]
+
+
+example (a : ZMod 12) : a*12 = 0 := by
+  have h: (12 : ZMod 12) = 0 := by
+    apply CharP.cast_eq_zero
+  rw [h]  
+  ring
+  
+example (a : ZMod n) : a*n = 0 := by
+  simp only [CharP.cast_eq_zero, mul_zero]
