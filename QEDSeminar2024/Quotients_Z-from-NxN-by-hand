@@ -1,4 +1,6 @@
-import Mathlib
+-- import Mathlib
+import Mathlib.Tactic
+import Mathlib.Data.Nat.Cast.Defs
 
 instance intQuotRel : Setoid (ℕ × ℕ) where
   r a b := a.1 + b.2 = b.1 + a.2
@@ -28,13 +30,9 @@ theorem g_welldef (x y : ℕ × ℕ) (h : x ≈ y) : g x = g y := by
   have h' : (x.1 : ℤ) = y.1 + x.2 - y.2 := by
     trans x.1 + y.2 - y.2
     ring
-    have h₁ : ( ↑(x.1  + y.2) : ℤ) = ↑x.1 + ↑y.2 := by
-      simp 
-    have h₂ : ( ↑(y.1  + x.2) : ℤ) = ↑y.1 + ↑x.2 := by
-      simp
-    rw [← h₁]
+    rw [← Nat.cast_add]
     rw [h]
-    rw [h₂]
+    rw [Nat.cast_add]
   rw [h']
   ring 
 
