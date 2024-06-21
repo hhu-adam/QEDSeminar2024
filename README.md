@@ -18,6 +18,10 @@ Nach erfolgreicher Installation ist der nächste Schritt, ein [Projekt zu initia
 
 ## Hilfe
 
+### Lehrbuch
+
+[Mathematics in Lean](https://leanprover-community.github.io/mathematics_in_lean/) führt systematisch in die Syntax von Lean ein und behandelt wichtige Teile der Beweisbibliothek mathlib. Kapitel 6 (*Structures*) und 7 (*Hierarchies*) gehen bereits deutlich über das hinaus, was im Robo-Spiel vorkommt.  Wer sich für Algebra interessiert, liest dann in Kaptitel 8 (*Groups and Rings*) weiter, wer sich eher für Analysis interessiert, in Kapitel 9 (*Topology*). 
+
 ### Taktiken
 
 - [Floris van Doorn's Cheat Sheet](https://github.com/fpvandoorn/LeanCourse23/blob/master/lean-tactics.pdf) 
@@ -25,7 +29,7 @@ Nach erfolgreicher Installation ist der nächste Schritt, ein [Projekt zu initia
 
 Die Taktik-Varianten mit Fragezeichen (`simp?`, `exact?`, `apply?`, `rw?`) kamen im Spiel nicht vor, sind aber sehr nützlich – einfach mal ausprobieren!  Auch `aesop?` kann Beweise abkürzen.
 
-### mathlib-Bibliothek
+### mathlib-Dokumentation
 
 In der [offiziellen Dokumentation von mathlib](https://leanprover-community.github.io/mathlib4_docs/) gibt es eine rudimentäre Suchfunktion.  Wenn man keine Idee hat, wie der Satz heißen könnte, nach dem man sucht, benutzt man besser [Loogle](https://loogle.lean-lang.org/). Um zum Beispiel den Satz
 
@@ -37,7 +41,6 @@ Loogle versteht `->` und `<->` anstelle von `→` und `↔`.  Um Suchanfragen mi
 ### Zulip
 
 Es gibt eine sehr freundliche weltweite [Lean/mathlib-Community](https://leanprover.zulipchat.com/), die rund um die Uhr Fragen beantwortet.  Um Fragen zu stellen, muss man sich allerdings zunächst einen Account auf Zulip zulegen.  Die erste Anlaufstelle ist dann der [`new members`-Kanal](https://leanprover.zulipchat.com/#narrow/stream/113489-new-members).
-
 
 
 ## Los geht's …
