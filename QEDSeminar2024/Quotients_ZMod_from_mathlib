@@ -1,6 +1,6 @@
-import Mathlib
--- import Mathlib.Data.ZMod.Defs
--- import Mathlib.Algebra.CharP.Defs
+-- import Mathlib
+import Mathlib.Data.ZMod.Basic
+import Mathlib.Algebra.CharP.Basic
 
 variable (n : ℕ) 
 
