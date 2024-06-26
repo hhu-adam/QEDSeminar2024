@@ -1,9 +1,11 @@
--- import Mathlib
+--import Mathlib
 import Mathlib.Data.ZMod.Basic
 import Mathlib.Algebra.CharP.Basic
 
-variable (n : ℕ) 
+variable (n : ℕ) [hn : NeZero n]
 
+-----------------------------------------
+-- some easy examples                    
 example : (n : ZMod n) = 0 := by
   apply CharP.cast_eq_zero
 
@@ -26,15 +28,38 @@ example (a : ZMod 12) : a*12 = 0 := by
 example (a : ZMod n) : a*n = 0 := by
   simp only [CharP.cast_eq_zero, mul_zero]
 
+------------------------------------------
+-- The canonical projection pr: Z → Z/n   
 
-theorem Int.isDomain : IsDomain ℤ := {
-  mul_left_cancel_of_ne_zero := _
-  mul_right_cancel_of_ne_zero := _
-  exists_pair_ne := _
-}
+def pr : ℤ → ZMod n := fun a => a 
+
+#check pr n
+
+theorem pr_surjective : (pr n).Surjective := by
+  unfold Function.Surjective
+  intro b 
+  simp [pr]
+  let a := ZMod.val b
+  use a
+  simp [a]
+
+theorem pr_zero_iff_n_dvd (a : ℤ ): pr n a = 0 ↔ ↑n∣a := by
+   simp [pr]
+   rw [← Int.cast_zero]
+   rw [ZMod.intCast_eq_intCast_iff] -- translates between "mathlib's (Fin n)-based version of Z/n" and "mod n arithmetic"
+   rw [Int.modEq_zero_iff_dvd] -- the key statement in the language of "mod n arithmetic": a = 0 mod n ↔ n∣a
+
+----------------------------------------                                     
+
+theorem Int.isDomain : IsDomain ℤ := by
+  exact IsDomain.mk
 
 theorem ZMod.isDomain (p : ℕ) (hp : p.Prime) : IsDomain (ZMod p) := {
-  mul_left_cancel_of_ne_zero := _
-  mul_right_cancel_of_ne_zero := _
-  exists_pair_ne := _
+  mul_left_cancel_of_ne_zero := by 
+    sorry
+  mul_right_cancel_of_ne_zero := by
+    sorry
+  exists_pair_ne := by 
+    sorry
 }
+
