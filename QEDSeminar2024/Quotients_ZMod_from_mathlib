@@ -25,3 +25,16 @@ example (a : ZMod 12) : a*12 = 0 := by
   
 example (a : ZMod n) : a*n = 0 := by
   simp only [CharP.cast_eq_zero, mul_zero]
+
+
+theorem Int.isDomain : IsDomain ℤ := {
+  mul_left_cancel_of_ne_zero := _
+  mul_right_cancel_of_ne_zero := _
+  exists_pair_ne := _
+}
+
+theorem ZMod.isDomain (p : ℕ) (hp : p.Prime) : IsDomain (ZMod p) := {
+  mul_left_cancel_of_ne_zero := _
+  mul_right_cancel_of_ne_zero := _
+  exists_pair_ne := _
+}
