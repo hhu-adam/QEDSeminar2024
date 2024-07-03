@@ -31,18 +31,26 @@ example (a : ZMod n) : a*n = 0 := by
 ------------------------------------------
 -- The canonical projection pr: Z → Z/n   
 
-def pr : ℤ → ZMod n := fun a => a 
+def pr (n : ℕ): ℤ →+* ZMod n := {
+  toFun := fun a => a 
+  map_one' := Int.cast_one
+  map_mul' := Int.cast_mul 
+  map_zero' := Int.cast_zero
+  map_add' := Int.cast_add
+}
 
 #check pr n
 
-theorem pr_surjective : (pr n).Surjective := by
-  unfold Function.Surjective
-  intro b 
-  simp [pr]
-  let a := ZMod.val b
-  use a
-  simp [a]
+example (a b c : ℤ ) : pr n (a * b - c) = pr n a * pr n b - pr n c := by
+  simp
+   
+example (n : ℕ) [NeZero n] (a : ZMod n) : ∃ a' : ℤ, pr n a' = a := by
+  use ZMod.val a
+  simp 
 
+lemma pr_val_id (n : ℕ) [NeZero n] (a : ZMod n) : pr n (ZMod.val a : ℤ ) = a := by
+  simp
+  
 theorem pr_zero_iff_n_dvd (a : ℤ ): pr n a = 0 ↔ ↑n∣a := by
    simp [pr]
    rw [← Int.cast_zero]
@@ -51,15 +59,25 @@ theorem pr_zero_iff_n_dvd (a : ℤ ): pr n a = 0 ↔ ↑n∣a := by
 
 ----------------------------------------                                     
 
-theorem Int.isDomain : IsDomain ℤ := by
-  exact IsDomain.mk
-
 theorem ZMod.isDomain (p : ℕ) (hp : p.Prime) : IsDomain (ZMod p) := {
   mul_left_cancel_of_ne_zero := by 
-    sorry
+    have hp' : NeZero p := { out := Nat.Prime.ne_zero hp }
+    intro a b c ha h
+    let a' := (ZMod.val a : ℤ) 
+    let b' := (ZMod.val b : ℤ)
+    let c' := (ZMod.val c : ℤ)
+    have hpra : pr p a' = a := pr_val_id p a 
+    have hprb : pr p b' = b := pr_val_id p b 
+    have hprc : pr p c' = c := pr_val_id p c 
+    have ha' : ¬( ↑p∣a') := by 
+      rw [← pr_zero_iff_n_dvd p a']
+      rw [hpra]
+      assumption
+    have h' : ↑p∣a*(b-c) := by 
+      sorry
+    sorry 
   mul_right_cancel_of_ne_zero := by
     sorry
   exists_pair_ne := by 
     sorry
 }
-
