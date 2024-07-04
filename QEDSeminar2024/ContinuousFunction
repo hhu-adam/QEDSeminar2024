@@ -4,12 +4,27 @@ open Function Set Real
 
 variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ)
 
+/- fibre with exactly two elements -/
+
 #check f ⁻¹' {a} #check ncard T #check ncard (f ⁻¹' {a})
 
-theorem twoset (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ S = {x₁, x₂} := by exact ncard_eq_two.mp hS
+example (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ S = {x₁, x₂} := ncard_eq_two.mp hS
 
-theorem twoset' (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), f x₁ = f x₂ := by have h : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ S = {x₁, x₂} := by exact ncard_eq_two.mp hS obtain ⟨ x₁, x₂, h_ne, h_S_eq ⟩ := h
+example (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
+  apply ncard_eq_two.mp at hfib
+  obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := hfib
+  use x₁, x₂
+  constructor
+  assumption
+  change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹' {0}
+  rw [h_fib_eq]
+  apply pair_subset_iff.mp
+  rfl
 
-theorem preim (h : x ∈ f ⁻¹' {0}) : f x = 0 := by exact h
 
-theorem preim' (x₁ x₂ : ℝ) (h : f ⁻¹' {0} = {x₂, x₁}) : f x₁ = 0 := by change x₁ ∈ f ⁻¹' {0} rw [h] exact mem_insert_of_mem x₂ rfl
+/- closed interval is compact -/
+
+def myI : Set ℝ := Icc 0 1
+
+example : IsCompact (Icc 0 1 : Set ℝ) := isCompact_Icc
+
