@@ -8,7 +8,30 @@ variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ)
 
 #check f ⁻¹' {a} #check ncard T #check ncard (f ⁻¹' {a})
 
-example (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ S = {x₁, x₂} := ncard_eq_two.mp hS
+lemma gt_of_ne_nlt (a b : ℝ) (h : a≠b) (h' : ¬ a < b) : b < a := by
+  apply lt_of_le_of_ne
+  · rw [lt_iff_not_ge] at h'
+    push_neg at h'
+    assumption
+  · symm
+    assumption
+
+lemma equality_of_twoset (a b : ℝ ) : {a, b} = ({b, a} : Set ℝ) := by 
+  ext 
+  simp
+  tauto
+
+example (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
+  apply ncard_eq_two.mp at hS
+  obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := hS
+  by_cases hle : x₁ < x₂ 
+  · use x₁, x₂ 
+  · use x₂, x₁
+    have : x₂ < x₁ := gt_of_ne_nlt x₁ x₂ h_ne hle
+    constructor
+    · assumption
+    · rw [equality_of_twoset]
+      assumption
 
 example (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
   apply ncard_eq_two.mp at hfib
