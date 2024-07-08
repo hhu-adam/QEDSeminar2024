@@ -6,43 +6,32 @@ variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ)
 
 /- fibre with exactly two elements -/
 
-#check f ⁻¹' {a} #check ncard T #check ncard (f ⁻¹' {a})
+#check f ⁻¹' {a} 
+#check ncard T 
+#check ncard (f ⁻¹' {a})
 
-lemma gt_of_ne_nlt (a b : ℝ) (h : a≠b) (h' : ¬ a < b) : b < a := by
-  apply lt_of_le_of_ne
-  · rw [lt_iff_not_ge] at h'
-    push_neg at h'
-    assumption
-  · symm
-    assumption
-
-lemma equality_of_twoset (a b : ℝ ) : {a, b} = ({b, a} : Set ℝ) := by 
-  ext 
-  simp
-  tauto
-
-example (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
+  
+lemma two_set (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
   apply ncard_eq_two.mp at hS
-  obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := hS
-  by_cases hle : x₁ < x₂ 
+  obtain ⟨ x₁, x₂, h_ne, h_S_eq ⟩ := hS
+  by_cases h_lt : x₁ < x₂ 
   · use x₁, x₂ 
   · use x₂, x₁
-    have : x₂ < x₁ := gt_of_ne_nlt x₁ x₂ h_ne hle
-    constructor
-    · assumption
-    · rw [equality_of_twoset]
-      assumption
+    · constructor
+      rw [not_lt] at h_lt
+      exact Ne.lt_of_le h_ne.symm h_lt
+      rw [pair_comm x₂ x₁]
+      exact h_S_eq
 
-example (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
-  apply ncard_eq_two.mp at hfib
+example (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
+  apply two_set at hfib
   obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := hfib
   use x₁, x₂
   constructor
-  assumption
-  change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹' {0}
-  rw [h_fib_eq]
-  apply pair_subset_iff.mp
-  rfl
+  · exact h_ne
+  · change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹' {0}
+    rw [h_fib_eq]
+    tauto
 
 
 /- closed interval is compact -/
@@ -50,4 +39,3 @@ example (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ ≠ x�
 def myI : Set ℝ := Icc 0 1
 
 example : IsCompact (Icc 0 1 : Set ℝ) := isCompact_Icc
-
