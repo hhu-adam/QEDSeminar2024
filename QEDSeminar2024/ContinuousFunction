@@ -2,7 +2,7 @@ import Mathlib
 
 open Function Set Real
 
-variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ)
+variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ) (A : Type)
 
 /- fibre with exactly two elements -/
 
@@ -10,7 +10,7 @@ variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ)
 #check ncard T 
 #check ncard (f ⁻¹' {a})
 
-  
+
 lemma two_set (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
   apply ncard_eq_two.mp at hS
   obtain ⟨ x₁, x₂, h_ne, h_S_eq ⟩ := hS
@@ -23,7 +23,40 @@ lemma two_set (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ <
       rw [pair_comm x₂ x₁]
       exact h_S_eq
 
-example (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
+
+lemma not_two_set (S : Set ℝ) [hSf : Finite S] (x₁ x₂ x₃ : ℝ ) (h1 : x₁ ∈ S) (h2 : x₂ ∈ S) (h3 : x₃ ∈ S) (h12: x₁ < x₂) (h23: x₂ < x₃) : ncard S ≠ 2 := by
+  intro hS
+  have h_incl : {x₁,x₂,x₃} ⊆ S := by -- short version: insert_subset h1 (pair_subset h2 h3)
+    apply insert_subset h1 
+    apply insert_subset h2
+    apply singleton_subset_iff.mpr 
+    exact h3
+  clear h1 h2 h3
+  have h_3card : ncard {x₁,x₂,x₃} = 3 := by  -- short version??
+    rw [ncard_eq_three.mpr]
+    use x₁, x₂, x₃
+    constructor
+    exact ne_of_lt h12
+    constructor
+    exact ne_of_lt (h12.trans h23)
+    constructor
+    exact ne_of_lt h23
+    rfl
+  clear h12 h23
+  have h_card_le : ncard {x₁,x₂,x₃} ≤ ncard S := by
+    apply ncard_le_ncard
+    exact h_incl
+    exact hSf
+  rw [h_3card] at h_card_le
+  clear h_incl h_3card
+  change 2 < S.ncard at h_card_le
+  have : 2 ≠ S.ncard := Nat.ne_of_lt h_card_le
+  clear h_card_le
+  symm at hS
+  contradiction
+    
+
+example (hfibf : Finite (f ⁻¹' {0})) (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
   apply two_set at hfib
   obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := hfib
   use x₁, x₂
