@@ -2,14 +2,7 @@ import Mathlib
 
 open Function Set Real
 
-variable (f : ℝ → ℝ ) (a : ℝ ) (T : Set ℝ) 
-
-/- fibre with exactly two elements -/
-
-#check f ⁻¹' {a} 
-#check ncard T 
-#check ncard (f ⁻¹' {a})
-
+/- sets with few elements -/
 
 lemma two_set (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
   apply ncard_eq_two.mp at hS
@@ -47,17 +40,34 @@ lemma not_two_set (S : Set ℝ) [hSf : Finite S] (x₁ x₂ x₃ : ℝ ) (h1 : x
   symm at hS
   contradiction
 
+/- main statement -/
 
-example (hfibf : Finite (f ⁻¹' {0})) (hfib : ncard (f ⁻¹' {0}) = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ f x₁ = 0 ∧ f x₂ = 0 := by 
-  apply two_set at hfib
-  obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := hfib
-  use x₁, x₂
-  constructor
-  · exact h_ne
-  · change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹' {0}
-    rw [h_fib_eq]
-    tauto
+theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (f ⁻¹' {y}) = 2 := by 
+  intro h_main
+  rcases h_main with ⟨ f, hf, hfib ⟩ 
+  have h0 := hfib 0
+  apply two_set at h0
+  obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := h0
+  have h_comp : IsCompact (Icc x₁ x₂) := isCompact_Icc
+  have h_none_e : (Icc x₁ x₂).Nonempty := by 
+    simp
+    exact le_of_lt h_ne
+  have h_max :  ∃ x ∈ Icc x₁ x₂, IsMaxOn f (Icc x₁ x₂) x := by
+    apply IsCompact.exists_isMaxOn
+    exact h_comp
+    exact h_none_e
+    exact Continuous.continuousOn hf
+  rcases h_max with ⟨m, hm, hmmax'⟩ 
+  have hmmax: ∀ x ∈ Icc x₁ x₂, f x ≤ f m := fun x a => hmmax' a
+  clear hmmax' h_comp h_none_e
+  
 
+  --use x₁, x₂
+  --constructor
+  --· exact h_ne
+  --· change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹' {0}
+  --  rw [h_fib_eq]
+  --  tauto
 
 /- closed interval is compact -/
 
