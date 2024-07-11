@@ -76,7 +76,6 @@ lemma my_max_left_boundary {x₁ x₂ y : ℝ} (f : ℝ → ℝ) (hx : x₁ ≤ 
 lemma my_max_right_boundary {x₁ x₂ y : ℝ} (f : ℝ → ℝ) (hx : x₁ ≤ x₂) (h : ∀ x ∈ Icc x₁ x₂, f x ≤ y ) : f x₂ ≤ y := by
   exact h x₂ (right_mem_Icc.mpr hx)
 
-
 lemma my_average {y₁ y₂ : ℝ} (h : y₁ ≤ y₂) : (y₁ + y₂)/2 ∈ Icc y₁ y₂ := by 
   rw [Set.mem_Icc]
   constructor
@@ -85,6 +84,13 @@ lemma my_average {y₁ y₂ : ℝ} (h : y₁ ≤ y₂) : (y₁ + y₂)/2 ∈ Icc
 
 lemma my_ivt ( f : ℝ → ℝ) (hf : Continuous f) (x₁ x₂ y : ℝ) (hx: x₁ ≤ x₂ ) (hy : y ∈ Icc (f x₁) (f x₂)) : ∃ z ∈ Icc x₁ x₂, z ∈ f ⁻¹' {y} := by
   apply intermediate_value_Icc
+  · rw [Set.mem_Icc] at hy
+    tauto
+  · exact Continuous.continuousOn hf
+  assumption
+
+lemma my_ivt' ( f : ℝ → ℝ) (hf : Continuous f) (x₁ x₂ y : ℝ) (hx: x₁ ≤ x₂ ) (hy : y ∈ Icc (f x₂) (f x₁)) : ∃ z ∈ Icc x₁ x₂, z ∈ f ⁻¹' {y} := by
+  apply intermediate_value_Icc ( a := x₂) 
   · rw [Set.mem_Icc] at hy
     tauto
   · exact Continuous.continuousOn hf
@@ -131,30 +137,36 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
   rw [isMaxOn_iff] at hmmax
   clear h_comp h_none_e
   --
-  have hy : f m/2 ∈ Icc (f x₁) (f m) := by
-    have hx : x₁ ≤ x₂ := le_of_lt h_ne
-    have h' : f x₁ ≤ f m := by  
-      exact hmmax x₁ (left_mem_Icc.mpr hx)
-    apply my_average at h'
-    have hx₁ : f x₁ = 0 := by 
-      change x₁ ∈ f ⁻¹' {0}
+  have h_fib' : f x₁ = 0 ∧ f x₂ = 0 := by 
+      change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f⁻¹' {0}
       rw [h_fib_eq]
       tauto 
-    simp [hx₁] at h'
-    simp [hx₁]
+  --    
+  have hz₁ : f m/2 ∈ Icc (f x₁) (f m) := by
+    have h' : f x₁ ≤ f m := hmmax x₁ (left_mem_Icc.mpr (le_of_lt h_ne))
+    apply my_average at h'  
+    simp [h_fib'.1] at h'
+    simp [h_fib'.1]
     exact h'
+  have hz₂ : f m/2 ∈ Icc (f x₂) (f m) := by
+    have h' : f x₂ ≤ f m := hmmax x₂ (right_mem_Icc.mpr (le_of_lt h_ne))
+    apply my_average at h'
+    simp [h_fib'.2] at h'
+    simp [h_fib'.2]
+    exact h'
+  --
   have : ∃ z₁ ∈ Icc x₁ m, z₁ ∈ f ⁻¹' {f m/2} := by 
     apply my_ivt 
     · exact hf
     · rw [Set.mem_Icc] at hm
       exact hm.1
-    · exact hy 
+    · exact hz₁
   have : ∃ z₂ ∈ Icc m x₂, z₂ ∈ f ⁻¹' {f m/2} := by 
     apply my_ivt 
     · exact hf
     · rw [Set.mem_Icc] at hm
       exact hm.2
-    · exact hy 
+    · exact hz₂ 
 
 /- closed interval is compact -/
 
