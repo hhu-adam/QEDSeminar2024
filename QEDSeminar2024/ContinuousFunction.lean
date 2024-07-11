@@ -2,6 +2,23 @@ import Mathlib
 
 open Function Set Real
 
+variable (a b c : ℝ)
+example (hb : b ∈ Icc a c) : a ≤ b := by
+  rw [Set.mem_Icc] at hb
+  tauto
+  --exact hb.1
+  
+example : a ∈ ({a, b} : Set ℝ) := by 
+  tauto 
+
+example (ha : 0 ≤ a) : (a/2 ≤ a) := by
+  linarith
+  --exact half_le_self ha
+
+example (ha : 0 ≤ a) : (0 ≤ a/2) := by
+  linarith
+
+
 /- sets with few elements -/
 
 lemma two_set (S : Set ℝ ) (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
@@ -57,11 +74,38 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     exact h_comp
     exact h_none_e
     exact Continuous.continuousOn hf
-  rcases h_max with ⟨m, hm, hmmax'⟩ 
-  have hmmax: ∀ x ∈ Icc x₁ x₂, f x ≤ f m := fun x a => hmmax' a
-  clear hmmax' h_comp h_none_e
-  
-
+  rcases h_max with ⟨m, hm, hmmax⟩ 
+  rw [isMaxOn_iff] at hmmax
+  clear h_comp h_none_e
+  have h_ivt : Icc (f x₁) (f m) ⊆ f '' Icc x₁ m := by
+    apply intermediate_value_Icc
+    · rw [Set.mem_Icc] at hm
+      tauto
+    · exact Continuous.continuousOn hf
+  have : ∃ z ∈ Icc x₁ x₂, z ∈ f ⁻¹' {f m/2} := by 
+    have : f m/2 ∈ f '' Icc x₁ m := by
+      have : f m/2 ∈ Icc (f x₁) (f m) := by
+        have : x₁ ∈ f ⁻¹' {0} := by
+          rw [h_fib_eq]
+          tauto 
+        rw [this]
+        rw [Set.mem_Icc]
+        have h' : f x₁ ≤ f m := by 
+          apply hmmax  
+          rw [Set.mem_Icc]
+          constructor
+          · linarith
+          · linarith
+        change f x₁ = 0 at this
+        rw [this] at h'
+        constructor
+        · linarith
+        · linarith
+      exact mem_of_subset_of_mem h_ivt this
+      
+        --rw [← this]
+        
+     
   --use x₁, x₂
   --constructor
   --· exact h_ne
