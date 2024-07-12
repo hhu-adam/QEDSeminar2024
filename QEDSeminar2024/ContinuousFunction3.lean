@@ -11,6 +11,44 @@ lemma my_twoset_is_finite {A : Type} {S : Set A} (h : ncard S = 2) : Finite S :=
   rw [h]
   simp
 
+lemma my_second_element {A : Type} {S : Set A} { a : A } (h : ncard S = 2) (ha : a ∈ S) : ∃ b ∈ S, a ≠ b := by
+    apply ncard_eq_two.mp at h
+    rcases h with ⟨ a', b', h_ne, hS ⟩ 
+    rw [hS] at ha
+    rw [hS]
+    change a = a' ∨ a = b' at ha
+    rcases ha with ha' | hb'
+    · use b'
+      constructor
+      · tauto
+      rw [ha']
+      exact h_ne
+    · use a'
+      constructor
+      · tauto
+      rw [hb']
+      exact h_ne.symm
+
+lemma my_second_element' {A : Type} {S : Set A} { a : A } (h : ncard S = 2) (ha : a ∈ S) : ∃ b, S = {a, b} := by
+    apply ncard_eq_two.mp at h
+    rcases h with ⟨ a', b', h_ne, hS ⟩ 
+    rw [hS] at ha
+    rw [hS]
+    change a = a' ∨ a = b' at ha
+    rcases ha with ha' | hb'
+    · tauto
+    · rw [pair_comm a' b']
+      tauto 
+
+example {A : Type} [LinearOrder A] (a b : A) : max a b = a ∨ max a b = b := by
+  exact max_choice a b
+
+example {A : Type} (S : Set ℕ) (f : ℕ → A) (a : A) (hs : s ∈ S) (hfs : f s = a) (ht : t ∈ S) (hft : f t = a ) : f (max s t) = a := by
+  rcases max_choice s t with hs | ht
+  · rw [hs]
+    exact hfs
+  · rw [ht]
+    exact hft
 
 open Real
 
@@ -25,12 +63,20 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     tauto
   have h_zero_at_x' : f x₁ = 0 ∧ f x₂ = 0 := h_zero_at_x
     --change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹'{0}    
-  have h_min :  ∃ x ∈ uIcc x₁ x₂, IsMinOn f (uIcc x₁ x₂) x := by
+  let x₁₂ := max x₁ x₂
+  have h_zero_at_x₁₂ : f x₁₂ = 0 := by
+    change f (max x₁ x₂) = 0
+    rcases max_choice x₁ x₂ with h₁ | h₂ 
+    · rw [h₁] 
+      exact h_zero_at_x.1
+    · rw [h₂]
+      exact h_zero_at_x.2
+  have h_min :  ∃ x ∈ uIcc x₁₂ (x₁₂+1), IsMinOn f (uIcc x₁₂ (x₁₂+1)) x := by
     apply IsCompact.exists_isMinOn
     · exact isCompact_uIcc
     · exact nonempty_uIcc
     · exact Continuous.continuousOn hf
-  have h_max :  ∃ x ∈ uIcc x₁ x₂, IsMaxOn f (uIcc x₁ x₂) x := by
+  have h_max :  ∃ x ∈ uIcc x₁₂ (x₁₂+1), IsMaxOn f (uIcc x₁₂ (x₁₂+1)) x := by
     apply IsCompact.exists_isMaxOn
     · exact isCompact_uIcc
     · exact nonempty_uIcc
@@ -39,36 +85,12 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
   obtain ⟨ x_max, h_max, h_max_at_x_max ⟩ := h_max
   rw [isMinOn_iff] at h_min_at_x_min
   rw [isMaxOn_iff] at h_max_at_x_max
-  have h_x₃ : ∃ x ∈ uIcc x_min x_max, x ∈ f⁻¹' {0} := by
-    apply intermediate_value_uIcc
-    · exact Continuous.continuousOn hf
-    · rw [← h_zero_at_x.1]
-      rw [mem_uIcc]
-      left
-      constructor
-      · exact h_min_at_x_min x₁ left_mem_uIcc
-      · exact h_max_at_x_max x₁ left_mem_uIcc
-  obtain ⟨ x₃, h₃, h_zero_at_x₃ ⟩ := h_x₃  
-  --
-  have h_incl : uIcc x_min x_max ⊆ uIcc x₁ x₂ := by
-    apply uIcc_subset_uIcc
-    exact h_min
-    exact h_max  
-  --
-  by_cases h_easy : x₁ ∉ uIcc x_min x_max ∧ x₂ ∉ uIcc x_min x_max
-  · have h_ne₁₃ : x₁ ≠ x₃ := by
-      by_contra h_eq
-      rw [h_eq] at h_easy
-      exact h_easy.1 h₃ 
-    have h_ne₂₃: x₂ ≠ x₃ := by
-      by_contra h_eq
-      rw [h_eq] at h_easy
-      exact h_easy.2 h₃
-    have h_fin : Finite (f ⁻¹'{0} ) := my_twoset_is_finite (hfib 0)
-    have h_lt2 : 2 < ncard (f ⁻¹' {0}) := by
-      rw [two_lt_ncard ]
-      exact ⟨x₁, h_zero_at_x.1, x₂, h_zero_at_x.2, x₃, h_zero_at_x₃, h_ne, h_ne₁₃, h_ne₂₃⟩ 
-    have h_contra : 2 ≠ ncard (f ⁻¹'{0}) := Nat.ne_of_lt h_lt2
-    have : 2 = ncard (f ⁻¹'{0}) := (hfib 0).symm
-    contradiction
-  
+  specialize h_min_at_x_min x₁₂ left_mem_uIcc
+  specialize h_max_at_x_max x₁₂ left_mem_uIcc
+  rw [h_zero_at_x₁₂] at h_min_at_x_min
+  rw [h_zero_at_x₁₂] at h_max_at_x_max
+  have h : ∃ x_max₂ ∈ f⁻¹' { f x_max }, x_max ≠ x_max₂ := by
+    apply my_second_element 
+    · exact hfib (f x_max)
+    · rfl
+  obtain ⟨ x_max₂, h_x_max₂, h_max_ne ⟩ := h
