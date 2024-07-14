@@ -1,6 +1,5 @@
 import Mathlib
 
-
 open Function Set 
 
 lemma my_ne_of_image_ne {A B : Type} {f : A → B } {a₁ a₂ : A} (h : f a₁ ≠ f a₂) : a₁ ≠ a₂ := by
@@ -76,46 +75,18 @@ lemma my_not_two_set {S : Set ℝ} [hSf : Finite S] {x₁ x₂ x₃ : ℝ} (h1 :
   symm at hS
   contradiction
 
-example {A : Type} [LinearOrder A] (a b : A) : max a b = a ∨ max a b = b := by
-  exact max_choice a b
-
-example {A : Type} {f : ℕ → A} {a : A} (hfs : f s = a) (hft : f t = a ) : f (max s t) = a := by
-  rcases max_choice s t with hs | ht
-  · rw [hs]
-    exact hfs
-  · rw [ht]
-    exact hft
-
 open Real
 
-example { a b : ℝ } (h : -a ≤ b) : -b ≤ a := by
-  exact neg_le.mp h
-
-example { a b : ℝ } (h : ¬ a < b) : b ≤ a := by
-  exact le_of_not_lt h
-
-example { a b : ℝ } : ¬ a < b ↔ b ≤ a := by
-  exact not_lt
-
-example { a b : ℝ } : Ioo a b ⊆ Icc a b := by
-  exact Ioo_subset_Icc_self
-
-example { a b x : ℝ } (h : x ∈ Ioo a b) : x ∈ Icc a b := by
-  exact mem_Icc_of_Ioo h
-
-example { a b : ℝ } (h : a < b) : a ≤ b := by
-  exact le_of_lt h
-
-example { a b c : ℝ } (h₁ : a < b) (h₂ : b ≤ c) : a < c := by
-  exact gt_of_ge_of_gt h₂ h₁  
-
-lemma my_neg_of_two_set_is_two_set { S : Set ℝ} : S.ncard = 2 ↔ (-S).ncard = 2 := by
-  sorry
+lemma my_neg_preserves_ncard { S : Set ℝ} [Finite S]: (-S).ncard = S.ncard := by
+  rw [← Set.image_neg]
+  rw [ncard_image_iff]
+  exact (Injective.injOn neg_injective)
 
 /- main statement -/
 
 theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (f ⁻¹' {y}) = 2 := by 
-  /- We can pick two points x₁ < x₂ in some fibre and assume WLOG that ∃ x ∈ [x₁, x₂] such that f x > f x₁ 
+  /- Let x₁ < x₂ be the two points in the fibre of 0.
+     We may assume WLOG that ∃ x ∈ [x₁, x₂] such that f x > 0 
      -- if no such x exists, use symmetry at the x-axis, i.e. pass to the function -f.                     
   -/
   suffices : ¬ (  ∃ f : ℝ → ℝ, ∃ x₁ x₂ : ℝ, ∃ x ∈ Ioo x₁ x₂, Continuous f ∧ (∀ y : ℝ, ncard (f ⁻¹' {y}) = 2)
@@ -198,15 +169,11 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     · use fun x ↦ f (-x), -x₂, -x₁, -x_max₁, -x_max₂ 
       have hf' : Continuous fun x ↦ f (-x) := Continuous.comp' hf continuous_neg
       have hfib' : ∀ y : ℝ, ((fun x ↦ f (-x)) ⁻¹'{y}).ncard = 2 := by
-        have : ∀ y : ℝ, (fun x ↦ f (-x)) ⁻¹'{y} = -f⁻¹'{y} := by
-          intro y
-          ext
-          simp 
         intro y
-        specialize this y
-        specialize hfib y
-        rw [this]
-        exact my_neg_of_two_set_is_two_set.1 hfib
+        have : (fun x ↦ f (-x)) ⁻¹'{y} = -f⁻¹'{y} := by
+          exact rfl
+        have hfin : Finite (f ⁻¹'{y} ) := my_twoset_is_finite (hfib y) 
+        rw [this, my_neg_preserves_ncard, ← hfib y]
       have h' : -x_max₁ < -x_max₂ := by
         simp
         rw [not_lt] at h
