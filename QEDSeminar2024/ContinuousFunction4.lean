@@ -134,8 +134,8 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
         specialize hfib 0
         contradiction
   /- As f is continuous, it attains a maximum at some point xmax₁ ∈ [x₁, x₂]. 
-     As we have just assumed that f attains a value > f x₁ somewhere along that interval,
-     the maximum at xmax₁ is a proper maximum, i.e. f xmax₁ > f x₁.
+     As we have just assumed that f attains a value > 0 somewhere along that interval,
+     the maximum at xmax₁ is a proper maximum, i.e. f xmax₁ > 0.
      By the assumption on the fibres of f, there is another point xmax₂ (somewhere in ℝ) 
      where the same value f xmax₁ is attained (i.e. f xmax₂ = f xmax₁).
      We may assume WLOG that xmax₁ < xmax₂
