@@ -142,7 +142,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
      -- otherwise use symmetry along the y-axis, i.e. pass to the function x ↦ f(-x).
   -/
   suffices : ¬ (  ∃ f : ℝ → ℝ, ∃ x₁ x₂ x_max₁ x_max₂ : ℝ, Continuous f ∧ (∀ y : ℝ, ncard (f ⁻¹' {y}) = 2)
-                              ∧ x₁ < x₂ ∧ x_max₁ < x_max₂ ∧ IsMaxOn f (Icc x₁ x₂) x_max₁ ∧ f x₁ = f x₂ ∧ f x_max₁ = f x_max₂   
+                              ∧ x₁ < x_max₁ ∧ x_max₁ < x₂ ∧ x_max₁ < x_max₂ ∧ IsMaxOn f (Icc x₁ x₂) x_max₁ ∧ f x₁ = f x₂ ∧ f x_max₁ = f x_max₂   
                               ∧ f x₁ < f x_max₁)
   · intro h_main
     apply this
@@ -163,6 +163,11 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       · exact hfib (f x_max₁)
       · exact rfl
     obtain ⟨ x_max₂, h_max₂, h_xmax₁_ne_xmax₂⟩ := this
+    rw [mem_Icc] at h_max₁
+    have h_x₁_lt_xmax₁ : x₁ < x_max₁ := lt_of_le_of_ne h_max₁.1 (my_ne_of_image_ne (ne_of_lt h_proper_max)) 
+    have h_xmax₁_lt_max₂ : x_max₁ < x₂ := by  
+      rw [h_fx₁_eq_fx₂] at h_proper_max
+      exact lt_of_le_of_ne h_max₁.2 (my_ne_of_image_ne (ne_of_lt h_proper_max).symm) 
     by_cases h : x_max₁ < x_max₂
     · use f, x₁, x₂, x_max₁, x_max₂
       aesop
@@ -172,7 +177,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
         intro y
         have : (fun x ↦ f (-x)) ⁻¹'{y} = -f⁻¹'{y} := by
           exact rfl
-        have hfin : Finite (f ⁻¹'{y} ) := my_twoset_is_finite (hfib y) 
+        have h_fin : Finite (f ⁻¹'{y} ) := my_twoset_is_finite (hfib y) 
         rw [this, my_neg_preserves_ncard, ← hfib y]
       have h' : -x_max₁ < -x_max₂ := by
         simp
@@ -193,9 +198,44 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
           exact ⟨ hxx₁, hxx₂ ⟩
         exact h_max_at_x_max₁ hx'
       aesop
-  /- After these trivial reductions :) we are finally, we are ready for the main part of the proof,
+  /- After these trivial reductions :) we are finally ready for the main part of the proof,
      which of course uses the intermediate value theorem.
   -/    
   intro h_main
-  obtain ⟨ f, x₁, x₂, xmax₁, xmax₂, hf, hfib, h_x₁_lt_x₂, h_xmax₁_lt_xmax₂, h_max_at_max₁, h_fx₁_eq_fx₂, h_fxmax₁_eq_fxmax₂, h_fx₁_lt_fxmax₁⟩ := h_main
-  sorry
+  obtain ⟨ f, x₁, x₂, xmax₁, xmax₂, hf, hfib, h_x₁_lt_xmax₁, h_xmax₁_lt_x₂, h_xmax₁_lt_xmax₂, h_max_at_max₁, h_fx₁_eq_fx₂, h_fxmax₁_eq_fxmax₂, h_fx₁_lt_fxmax₁⟩ := h_main
+  by_cases h : x₂ < xmax₂
+  · have : ∃ v : ℝ, v ∈ Ioo (f x₁) (f xmax₁) := exists_between h_fx₁_lt_fxmax₁ 
+    obtain ⟨ v, hv ⟩ := this
+    have h₁: ∃ p₁ ∈ Ioo x₁ xmax₁, p₁ ∈ f ⁻¹' {v} := by
+      apply intermediate_value_Ioo 
+      · exact le_of_lt h_x₁_lt_xmax₁
+      · exact Continuous.continuousOn hf
+      · exact hv 
+    have h₂: ∃ p₂ ∈ Ioo xmax₁ x₂, p₂ ∈ f ⁻¹' {v} := by
+      apply intermediate_value_Ioo' 
+      · exact le_of_lt h_xmax₁_lt_x₂
+      · exact Continuous.continuousOn hf
+      · rw [← h_fx₁_eq_fx₂]
+        exact hv  
+    have h₃: ∃ p₃ ∈ Ioo x₂ xmax₂, p₃ ∈ f ⁻¹' {v} := by
+      apply intermediate_value_Ioo
+      · exact le_of_lt h
+      · exact Continuous.continuousOn hf
+      · rw [← h_fx₁_eq_fx₂,← h_fxmax₁_eq_fxmax₂]
+        exact hv 
+    have h_fin : Finite (f ⁻¹'{v} ) := my_twoset_is_finite (hfib v)
+    obtain ⟨p₁, h_p₁, h_p₁v⟩ := h₁
+    obtain ⟨p₂, h_p₂, h_p₂v⟩ := h₂
+    obtain ⟨p₃, h_p₃, h_p₃v⟩ := h₃
+    apply my_not_two_set h_p₁v h_p₂v h_p₃v
+    · exact lt_trans h_p₁.2 h_p₂.1
+    · exact lt_trans h_p₂.2 h_p₃.1
+    exact hfib v
+  · sorry
+    
+
+      
+     
+
+      
+      
