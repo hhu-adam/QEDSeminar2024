@@ -2,8 +2,14 @@ import Mathlib
 
 open Function Set 
 
-lemma my_ne_of_image_ne {A B : Type} {f : A → B } {a₁ a₂ : A} (h : f a₁ ≠ f a₂) : a₁ ≠ a₂ := by
+lemma my_ne_of_image_ne {A B : Type} {f : A → B } {a₁ a₂ : A} : f a₁ ≠ f a₂ → a₁ ≠ a₂ := by
+  intro h
   exact fun a => h (congrArg f a)
+
+lemma my_lt_of_not_lt_of_ne {A : Type } [LinearOrder A] {a b : A} : ¬ a < b →  a ≠ b → b < a := by
+  intro h
+  intro h_ne 
+  exact lt_of_le_of_ne (le_of_not_lt h) (id (Ne.symm h_ne))
 
 lemma my_twoset_is_finite {A : Type} {S : Set A} (h : ncard S = 2) : Finite S := by
   apply finite_of_ncard_ne_zero
@@ -231,9 +237,13 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     · exact lt_trans h_p₁.2 h_p₂.1
     · exact lt_trans h_p₂.2 h_p₃.1
     exact hfib v
-  · sorry
-    
-
+  · have h': xmax₂ < x₂ := by 
+      apply my_lt_of_not_lt_of_ne
+      · exact h
+      · rw [h_fx₁_eq_fx₂,h_fxmax₁_eq_fxmax₂] at h_fx₁_lt_fxmax₁
+        exact my_ne_of_image_ne (ne_of_lt h_fx₁_lt_fxmax₁)
+    clear h
+    sorry
       
      
 
