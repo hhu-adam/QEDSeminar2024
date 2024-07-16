@@ -11,8 +11,41 @@ lemma my_twoset_is_finite {A : Type} {S : Set A} (h : ncard S = 2) : Finite S :=
   rw [h]
   simp
 
-example (f: ℝ → ℝ) (x : ℝ) : (-f) x = - (f x) := by
-  exact rfl
+lemma my_two_set {S : Set ℝ } (hS : ncard S = 2) : ∃ (x₁ x₂ : ℝ ), x₁ < x₂ ∧ S = {x₁, x₂} := by 
+  apply ncard_eq_two.mp at hS
+  obtain ⟨ x₁, x₂, h_ne, h_S_eq ⟩ := hS
+  by_cases h_lt : x₁ < x₂ 
+  · use x₁, x₂ 
+  · use x₂, x₁
+    · constructor
+      rw [not_lt] at h_lt
+      exact Ne.lt_of_le h_ne.symm h_lt
+      rw [pair_comm x₂ x₁]
+      exact h_S_eq
+
+lemma my_not_two_set {S : Set ℝ} [hSf : Finite S] {x₁ x₂ x₃ : ℝ} (h1 : x₁ ∈ S) (h2 : x₂ ∈ S) (h3 : x₃ ∈ S) (h12: x₁ < x₂) (h23: x₂ < x₃) : ncard S ≠ 2 := by
+  intro hS
+  have h_lt : 2 < S.ncard := by
+    rw [two_lt_ncard]
+    -- short-cut from here: exact ⟨x₁, h1, x₂, h2, x₃, h3, ne_of_lt h12, ne_of_lt (h12.trans h23), ne_of_lt h23⟩ 
+    use x₁
+    constructor
+    exact h1
+    use x₂
+    constructor
+    exact h2
+    use x₃ 
+    constructor
+    exact h3
+    constructor
+    exact ne_of_lt h12
+    constructor
+    exact ne_of_lt (h12.trans h23)
+    exact ne_of_lt h23
+  have : 2 ≠ S.ncard := Nat.ne_of_lt h_lt
+  symm at hS
+  contradiction
+
 
 open Real
 
@@ -21,35 +54,58 @@ open Real
 theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (f ⁻¹' {y}) = 2 := by
   intro h_main
   obtain ⟨ f, hf, hfib ⟩ := h_main
-  obtain ⟨ x₁, x₂, h_ne, h_fib_eq ⟩ := ncard_eq_two.mp (hfib 0)
+  obtain ⟨ x₁, x₂, h_x₁_lt_x₂, h_fib_eq ⟩ := my_two_set (hfib 0)
+  suffices : ∃ v p₁ p₂ p₃ : ℝ, p₁ < p₂ ∧ p₂ < p₃ ∧ f p₁ = v ∧ f p₂ = v ∧ f p₃  = v
+  · obtain ⟨ v, p₁ , p₂, p₃, h₁₂, h₂₃, hfp₁, hfp₂, hfp₃ ⟩ := this
+    change p₁ ∈ f ⁻¹' {v} at hfp₁
+    change p₂ ∈ f ⁻¹' {v} at hfp₂
+    change p₃ ∈ f ⁻¹' {v} at hfp₃
+    have h_fin : Finite (f ⁻¹'{v} ) := my_twoset_is_finite (hfib v) 
+    have : ncard (f ⁻¹'{v}) ≠ 2 := my_not_two_set hfp₁ hfp₂ hfp₃ h₁₂ h₂₃
+    specialize hfib v
+    contradiction
+  /- here the proof begins …   -/
   have h_zero_at_x : x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹'{0} := by
     rw [h_fib_eq]
     tauto
   have h_zero_at_x' : f x₁ = 0 ∧ f x₂ = 0 := h_zero_at_x
     --change x₁ ∈ f ⁻¹' {0} ∧ x₂ ∈ f ⁻¹'{0}
-  have h_min :  ∃ x ∈ uIcc x₁ x₂, IsMinOn f (uIcc x₁ x₂) x := by
+  have h_min :  ∃ x ∈ Icc x₁ x₂, IsMinOn f (Icc x₁ x₂) x := by
     apply IsCompact.exists_isMinOn
-    · exact isCompact_uIcc
-    · exact nonempty_uIcc
+    · exact isCompact_Icc
+    · exact nonempty_Icc.mpr (le_of_lt h_x₁_lt_x₂)
     · exact Continuous.continuousOn hf
-  have h_max :  ∃ x ∈ uIcc x₁ x₂, IsMaxOn f (uIcc x₁ x₂) x := by
+  have h_max :  ∃ x ∈ Icc x₁ x₂, IsMaxOn f (Icc x₁ x₂) x := by
     apply IsCompact.exists_isMaxOn
-    · exact isCompact_uIcc
-    · exact nonempty_uIcc
+    · exact isCompact_Icc
+    · exact nonempty_Icc.mpr (le_of_lt h_x₁_lt_x₂)
     · exact Continuous.continuousOn hf
   obtain ⟨ xmin, h_min, h_min_at_xmin ⟩ := h_min
   obtain ⟨ xmax, h_max, h_max_at_xmax ⟩ := h_max
   rw [isMinOn_iff] at h_min_at_xmin
   rw [isMaxOn_iff] at h_max_at_xmax
-
+  /- 
   have h_incl : uIcc xmin xmax ⊆ uIcc x₁ x₂ := by
     apply uIcc_subset_uIcc
     exact h_min
     exact h_max
-  --
-  --by_cases h_easy : x₁ ∉ uIcc xmin xmax ∧ x₂ ∉ uIcc xmin xmax
+  -/
+  by_cases h_const : f xmin = 0 ∧ f xmax = 0
+  · /-  The trivial case when f is CONSTANT on the chosen interval  -/
+    have : ∃ x : ℝ, x ∈ Ioo x₁ x₂ := exists_between h_x₁_lt_x₂
+    obtain ⟨ x , hx ⟩ := this
+    specialize h_min_at_xmin x (Ioo_subset_Icc_self hx)
+    specialize h_max_at_xmax x (Ioo_subset_Icc_self hx)
+    rw [h_const.1] at h_min_at_xmin
+    rw [h_const.2] at h_max_at_xmax
+    have : f x = 0 := by
+      rw [eq_iff_le_not_lt, not_lt]
+      exact ⟨ h_max_at_xmax, h_min_at_xmin ⟩ 
+    use 0, x₁, x, x₂
+    aesop
   by_cases h_easy : f xmin < 0 ∧ 0 < f xmax
-  · have h_x₃ : ∃ x ∈ uIcc xmin xmax, x ∈ f⁻¹' {0} := by
+  · /-   The easy case when f has a proper minimum and a proper maximum on the chosen interval   -/
+    have h_x₃ : ∃ x ∈ uIcc xmin xmax, x ∈ f⁻¹' {0} := by
       apply intermediate_value_uIcc
       · exact Continuous.continuousOn hf
       · rw [← h_zero_at_x.1]
@@ -71,13 +127,9 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     have h_contra : 2 ≠ ncard (f ⁻¹'{0}) := Nat.ne_of_lt h_lt2
     have : 2 = ncard (f ⁻¹'{0}) := (hfib 0).symm
     contradiction
-  clear h_zero_at_x h_fib_eq h_incl
-  · rw [not_and_or] at h_easy
-    simp at h_easy
-    wlog h_proper_max : 0 < f xmax generalizing f xmin xmax
+  clear h_zero_at_x h_fib_eq
+  · wlog h_proper_max : 0 < f xmax generalizing f
     · specialize this (-f)
-      have hf' : Continuous (-f) := continuous_neg_iff.mpr hf
-      specialize this hf'
       have hfib' : ∀ y : ℝ, ((-f) ⁻¹'{y}).ncard = 2 := by
         intro y
         have : (-f) ⁻¹'{y} = f⁻¹'{-y} := by
@@ -86,38 +138,10 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
           exact neg_eq_iff_eq_neg          
         rw [this]
         exact hfib (-y)
-      specialize this hfib'  
-      have h_zero_at_x'' : (-f) x₁ = 0 ∧ (-f) x₂ = 0 := by
-        simp
-        exact h_zero_at_x'
-      specialize this h_zero_at_x''  
-      specialize this xmax h_max
-      have h_f'_min_at_xmax : ∀ x ∈ uIcc x₁ x₂, (-f) xmax ≤ (-f) x := by
-        intro x hx
-        simp
-        exact h_max_at_xmax x hx
-      specialize this h_f'_min_at_xmax
-      specialize this xmin h_min
-      have h_f'_max_at_xmin : ∀ x ∈ uIcc x₁ x₂, (-f) x ≤ (-f) xmin := by
-        intro x hx
-        simp
-        exact h_min_at_xmin x hx
-      specialize this h_f'_max_at_xmin
-      rw [not_and_or] at this
-      simp at this
-      rw [not_and_or] at h_easy
-      simp at h_easy
-      simp at h_proper_max
-      have h'' : 0 ≤ f xmin := this h_easy.symm
-      
-∀ x ∈ uIcc x₁ x₂, (-f) xmax ≤ (-f) x
-      have h_proper_max' : 0 < (-f) xmax := by
-          rw [not_lt] at h_proper_max
-          have : 0 < - (f xmax) := by 
-            exact rfl 
-          --simp only [Pi.neg_apply, neg_lt_neg_iff]
+      have hf' : Continuous (-f) := by
+        continuous_neg_iff.mpr hf
+        have hx'_lt' : (-f) x₁ < (-f) x' := by
+          simp only [Pi.neg_apply, neg_lt_neg_iff]
           exact hx'_lt
 
       done
-    done 
-  done 
