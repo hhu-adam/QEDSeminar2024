@@ -104,29 +104,40 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     use 0, x₁, x, x₂
     aesop
   by_cases h_easy : f xmin < 0 ∧ 0 < f xmax
-  · /-   The easy case when f has a proper minimum and a proper maximum on the chosen interval   -/
-    have h_x₃ : ∃ x ∈ uIcc xmin xmax, x ∈ f⁻¹' {0} := by
+  · /-   The easy case when f has a proper minimum and a proper maximum on the chosen interval.   -/
+    have h_x : ∃ x ∈ uIcc xmin xmax, x ∈ f⁻¹' {0} := by  -- uIoo does not seem to exist 
       apply intermediate_value_uIcc
       · exact Continuous.continuousOn hf
       · rw [← h_zero_at_x.1]
         rw [mem_uIcc]
         left
         constructor
-        · exact h_min_at_xmin x₁ left_mem_uIcc
-        · exact h_max_at_xmax x₁ left_mem_uIcc
-    obtain ⟨ x₃, h₃, h_zero_at_x₃ ⟩ := h_x₃
-    --
-    have h_ne₁₃ : x₁ ≠ x₃ := by
-      sorry
-    have h_ne₂₃: x₂ ≠ x₃ := by
-      sorry
+        · exact h_min_at_xmin x₁ (left_mem_Icc.mpr (le_of_lt h_x₁_lt_x₂))
+        · exact h_max_at_xmax x₁ (left_mem_Icc.mpr (le_of_lt h_x₁_lt_x₂))
+    obtain ⟨ x, h_x, h_zero_at_x ⟩ := h_x
+    rw [← h_zero_at_x'.1] at h_easy
+    have : xmin ≠ x₁ := (my_ne_of_image_ne (ne_of_lt h_easy.1))
+    have h_x₁_lt_xmin : x₁ < xmin := (this.symm).lt_of_le h_min.1
+    have : x₁ ≠ xmax := (my_ne_of_image_ne (ne_of_lt h_easy.2))
+    have h_x₁_lt_xmax : x₁ < xmax := this.lt_of_le h_max.1
+    rw [h_zero_at_x'.1, ← h_zero_at_x'.2] at h_easy
+    have : xmin ≠ x₂ := my_ne_of_image_ne (ne_of_lt h_easy.1)
+    have h_xmin_lt_x₂ : xmin < x₂ := this.lt_of_le h_min.2
+    have : x₂ ≠ xmax := my_ne_of_image_ne (ne_of_lt h_easy.2)
+    have h_xmax_lt_x₂ : xmax < x₂ := (this.symm).lt_of_le h_max.2
+    rw [mem_Icc] at h_min
+    rw [mem_uIcc] at h_x
+    have h_x₁_lt_x : x₁ < x := by
+      rcases h_x with h_x_1 | h_x_2
+      · linarith
+      · linarith
+    have h_ne₂₃: x < x₂ := by
+      rcases h_x with h_x_1 | h_x_2
+      · linarith
+      · linarith
     have h_fin : Finite (f ⁻¹'{0} ) := my_twoset_is_finite (hfib 0)
-    have h_lt2 : 2 < ncard (f ⁻¹' {0}) := by
-      rw [two_lt_ncard ]
-      exact ⟨x₁, h_zero_at_x.1, x₂, h_zero_at_x.2, x₃, h_zero_at_x₃, h_ne, h_ne₁₃, h_ne₂₃⟩
-    have h_contra : 2 ≠ ncard (f ⁻¹'{0}) := Nat.ne_of_lt h_lt2
-    have : 2 = ncard (f ⁻¹'{0}) := (hfib 0).symm
-    contradiction
+    use 0, x₁, x, x₂
+    aesop
   clear h_zero_at_x h_fib_eq
   · wlog h_proper_max : 0 < f xmax generalizing f
     · specialize this (-f)
