@@ -84,12 +84,14 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
   obtain ⟨ xmax, h_max, h_max_at_xmax ⟩ := h_max
   rw [isMinOn_iff] at h_min_at_xmin
   rw [isMaxOn_iff] at h_max_at_xmax
-  /- 
-  have h_incl : uIcc xmin xmax ⊆ uIcc x₁ x₂ := by
-    apply uIcc_subset_uIcc
-    exact h_min
-    exact h_max
-  -/
+  --
+  have h_min_max_ineq : f xmin ≤ 0 ∧ 0 ≤ f xmax := by
+    specialize h_min_at_xmin x₁ (left_mem_Icc.mpr (le_of_lt h_x₁_lt_x₂))
+    specialize h_max_at_xmax x₁ (left_mem_Icc.mpr (le_of_lt h_x₁_lt_x₂))
+    rw [h_zero_at_x'.1] at h_min_at_xmin
+    rw [h_zero_at_x'.1] at h_max_at_xmax
+    exact ⟨ h_min_at_xmin, h_max_at_xmax ⟩ 
+  --  
   by_cases h_const : f xmin = 0 ∧ f xmax = 0
   · /-  The trivial case when f is CONSTANT on the chosen interval  -/
     have : ∃ x : ℝ, x ∈ Ioo x₁ x₂ := exists_between h_x₁_lt_x₂
@@ -103,56 +105,107 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       exact ⟨ h_max_at_xmax, h_min_at_xmin ⟩ 
     use 0, x₁, x, x₂
     aesop
-  by_cases h_easy : f xmin < 0 ∧ 0 < f xmax
-  · /-   The easy case when f has a proper minimum and a proper maximum on the chosen interval.   -/
-    have h_x : ∃ x ∈ uIcc xmin xmax, x ∈ f⁻¹' {0} := by  -- uIoo does not seem to exist 
-      apply intermediate_value_uIcc
-      · exact Continuous.continuousOn hf
-      · rw [← h_zero_at_x.1]
-        rw [mem_uIcc]
-        left
-        constructor
-        · exact h_min_at_xmin x₁ (left_mem_Icc.mpr (le_of_lt h_x₁_lt_x₂))
-        · exact h_max_at_xmax x₁ (left_mem_Icc.mpr (le_of_lt h_x₁_lt_x₂))
-    obtain ⟨ x, h_x, h_zero_at_x ⟩ := h_x
-    rw [← h_zero_at_x'.1] at h_easy
-    have : xmin ≠ x₁ := (my_ne_of_image_ne (ne_of_lt h_easy.1))
-    have h_x₁_lt_xmin : x₁ < xmin := (this.symm).lt_of_le h_min.1
-    have : x₁ ≠ xmax := (my_ne_of_image_ne (ne_of_lt h_easy.2))
-    have h_x₁_lt_xmax : x₁ < xmax := this.lt_of_le h_max.1
-    rw [h_zero_at_x'.1, ← h_zero_at_x'.2] at h_easy
-    have : xmin ≠ x₂ := my_ne_of_image_ne (ne_of_lt h_easy.1)
-    have h_xmin_lt_x₂ : xmin < x₂ := this.lt_of_le h_min.2
-    have : x₂ ≠ xmax := my_ne_of_image_ne (ne_of_lt h_easy.2)
-    have h_xmax_lt_x₂ : xmax < x₂ := (this.symm).lt_of_le h_max.2
-    rw [mem_Icc] at h_min
-    rw [mem_uIcc] at h_x
-    have h_x₁_lt_x : x₁ < x := by
-      rcases h_x with h_x_1 | h_x_2
-      · linarith
-      · linarith
-    have h_ne₂₃: x < x₂ := by
-      rcases h_x with h_x_1 | h_x_2
-      · linarith
-      · linarith
-    have h_fin : Finite (f ⁻¹'{0} ) := my_twoset_is_finite (hfib 0)
-    use 0, x₁, x, x₂
-    aesop
-  clear h_zero_at_x h_fib_eq
-  · wlog h_proper_max : 0 < f xmax generalizing f
-    · specialize this (-f)
-      have hfib' : ∀ y : ℝ, ((-f) ⁻¹'{y}).ncard = 2 := by
-        intro y
-        have : (-f) ⁻¹'{y} = f⁻¹'{-y} := by
-          ext
+  · /- Now for the NON-CONSTANT cases. -/
+    have h_notconst : f xmin < 0 ∨ 0 < f xmax := by
+      rw [not_and_or] at h_const
+      push_neg at h_const
+      rcases h_const with h_fmin_not0 | h_fmax_not0
+      · left
+        exact h_fmin_not0.lt_of_le h_min_max_ineq.1
+      · right
+        exact (h_fmax_not0.symm).lt_of_le h_min_max_ineq.2
+    clear h_const  
+    --  
+    by_cases h_easy : f xmin < 0 ∧ 0 < f xmax
+    · /-   First, the EASY case when f has both a proper minimum and a proper maximum on the chosen interval.   -/
+      have h_x : ∃ x ∈ uIcc xmin xmax, x ∈ f⁻¹' {0} := by  -- uIoo does not seem to exist 
+        apply intermediate_value_uIcc
+        · exact Continuous.continuousOn hf
+        · rw [mem_uIcc]
+          left
+          exact h_min_max_ineq
+      obtain ⟨ x, h_x, h_zero_at_x ⟩ := h_x
+      /- Still need to show x₁ < x < x₂.
+         Will do this by first showing x₁ < xmin < x₂ and x₁ < xmax < x₂.
+         This is ugly. :(
+       -/
+      rw [← h_zero_at_x'.1] at h_easy
+      have : xmin ≠ x₁ := (my_ne_of_image_ne (ne_of_lt h_easy.1))
+      have h_x₁_lt_xmin : x₁ < xmin := (this.symm).lt_of_le h_min.1
+      have : x₁ ≠ xmax := (my_ne_of_image_ne (ne_of_lt h_easy.2))
+      have h_x₁_lt_xmax : x₁ < xmax := this.lt_of_le h_max.1
+      rw [h_zero_at_x'.1, ← h_zero_at_x'.2] at h_easy
+      have : xmin ≠ x₂ := my_ne_of_image_ne (ne_of_lt h_easy.1)
+      have h_xmin_lt_x₂ : xmin < x₂ := this.lt_of_le h_min.2
+      have : x₂ ≠ xmax := my_ne_of_image_ne (ne_of_lt h_easy.2)
+      have h_xmax_lt_x₂ : xmax < x₂ := (this.symm).lt_of_le h_max.2
+      rw [mem_Icc] at h_min
+      rw [mem_uIcc] at h_x
+      have h_x₁_lt_x : x₁ < x := by
+        rcases h_x with h_x_1 | h_x_2
+        · linarith
+        · linarith
+      have h_ne₂₃: x < x₂ := by
+        rcases h_x with h_x_1 | h_x_2
+        · linarith
+        · linarith
+      /- Now we've finally shown that x₁ < x < x₂, and this case is almost done.-/
+      have h_fin : Finite (f ⁻¹'{0} ) := my_twoset_is_finite (hfib 0)
+      use 0, x₁, x, x₂
+      aesop
+    · /- Now come the cases where exactly one of {f xmin, f xmax} is ≠ 0.  -/
+      have h_noteasy : f xmin = 0 ∨ 0 = f xmax := by
+        rw [not_and_or] at h_easy
+        repeat rw [eq_iff_le_not_lt]
+        rcases h_easy with h_not_fmin_lt_0 | h_not_0_lt_fmax
+        · left
+          exact ⟨ h_min_max_ineq.1, h_not_fmin_lt_0⟩ 
+        · right
+          exact ⟨ h_min_max_ineq.2, h_not_0_lt_fmax⟩
+      clear h_easy
+      /- We reduce to the case that f xmin = 0 and f xmax ≠ 0 using symmetry of the 
+         problem along the x-axis, using WLOG.  -/
+      clear h_fib_eq h_zero_at_x
+      wlog h_pos : f xmin = 0 ∧ 0 < f xmax  generalizing f xmin xmax with h_wlog
+      · have : f xmin < 0 ∧ 0 = f xmax := by
+          rw [not_and_or] at h_pos
+          rcases h_pos with h_not_fmin_0 | h_not_0_lt_fmax
+          · constructor
+            · push_neg at h_not_fmin_0
+              exact h_not_fmin_0.lt_of_le h.1
+            · exact (or_iff_right h_not_fmin_0).mp h_noteasy
+          · constructor
+            · exact (or_iff_left h_not_0_lt_fmax).mp h_notconst
+            · rw [eq_iff_le_not_lt]
+              exact ⟨ h_min_max_ineq.2, h_not_0_lt_fmax ⟩ 
+        /- PROOF that it indeed suffices to complete the argument under the hypothesis declared by WLOG-/
+        specialize h_wlog (-f)
+        have hf' : Continuous (-f) := continuous_neg_iff.mpr hf
+        specialize h_wlog hf'
+        have hfib' : ∀ y : ℝ, ((-f) ⁻¹'{y}).ncard = 2 := by
+          intro y
+          have : (-f) ⁻¹'{y} = f⁻¹'{-y} := by
+            ext
+            simp
+            exact neg_eq_iff_eq_neg          
+          rw [this]
+          exact hfib (-y)
+        specialize h_wlog hfib'        
+        have h_zero_at_x'' : (-f) x₁ = 0 ∧ (-f) x₂ = 0 := by
           simp
-          exact neg_eq_iff_eq_neg          
-        rw [this]
-        exact hfib (-y)
-      have hf' : Continuous (-f) := by
-        continuous_neg_iff.mpr hf
-        have hx'_lt' : (-f) x₁ < (-f) x' := by
-          simp only [Pi.neg_apply, neg_lt_neg_iff]
-          exact hx'_lt
-
-      done
+        specialize h_wlog h_zero_at_x''
+        have h_max_at_xmax' : ∀ x ∈ Icc x₁ x₂, (-f) xmax ≤ (-f) x := by
+          intro x hx
+          specialize h_max_at_xmax x hx
+          simp
+          exact h_max_at_xmax
+        specialize h_wlog xmax h_max h_max_at_xmax' 
+        have h_min_at_xmin' : ∀ x ∈ Icc x₁ x₂, (-f) x ≤ (-f) xmin := by
+          intro x hx
+          specialize h_min_at_xmin x hx
+          simp
+          exact h_min_at_xmin
+        specialize h_wlog xmin h_min h_min_at_xmin'
+        simp at h_wlog
+        aesop
+      sorry -- PROOF of the main statement under the hypothesis declared by WLOG
