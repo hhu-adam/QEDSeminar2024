@@ -64,6 +64,10 @@ lemma my_second_element {A : Type} {S : Set A} { a : A } (h : ncard S = 2) (ha :
       rw [hb']
       exact h_ne
 
+    
+lemma my_lt_of_lt_of_le {A : Type} [LinearOrder A] {a b c : A} (h₁ : a < b) (h₂ : b ≤ c) : a < c := by 
+  exact gt_of_ge_of_gt h₂ h₁
+
 open Real
 
 lemma my_neg_preserves_ncard { S : Set ℝ} [Finite S]: (-S).ncard = S.ncard := by
@@ -283,6 +287,16 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       use v, -p₃, -p₂, -p₁ 
       aesop
     /- Now we continue the argument, assuming wlog that xmax < xmax₂ -/
+    /- The following lines essentially copied from Part 2:-/
+    have h_fx₁_lt_max : f x₁ < f xmax := by
+      rw [← h_zero_at_x.1] at h_pos
+      exact h_pos.2
+    have : x₁ ≠ xmax := (my_ne_of_image_ne (ne_of_lt h_fx₁_lt_max))
+    have h_x₁_lt_xmax : x₁ < xmax := this.lt_of_le h_max.1
+    rw [h_zero_at_x.1, ← h_zero_at_x.2] at h_fx₁_lt_max
+    have : x₂ ≠ xmax := my_ne_of_image_ne (ne_of_lt h_fx₁_lt_max)
+    have h_xmax_lt_x₂ : xmax < x₂ := (this.symm).lt_of_le h_max.2
+    /- One last important case distinction-/
     have h_cases : xmax₂ < x₂ ∨ x₂ < xmax₂ := by 
       obtain (h_lt | h_eq | h_gt) := lt_trichotomy xmax₂ x₂
       · left
@@ -294,7 +308,60 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
         assumption
     obtain ( h_max₂_inside | h_max₂_beyond ) := h_cases
     · /- PART 3:  The case when a proper maximum is attained twice within [x₁,x₂], at xmax and xmax₂. -/
-      sorry
+      have : ∃ xdip ∈ Icc xmax xmax₂, IsMinOn f (Icc xmax xmax₂) xdip := by
+        apply IsCompact.exists_isMinOn
+        · exact isCompact_Icc
+        · exact nonempty_Icc.mpr (le_of_lt h_xmax_lt_xmax₂)
+        · exact Continuous.continuousOn hf
+      obtain ⟨xdip, h_xdip, h_xdip_local_min⟩ := this
+      rw [isMinOn_iff] at h_xdip_local_min
+      have h_0_le_fxdip : 0 ≤ f xdip := by
+        sorry        
+      have h_fxdip_lt_max : f xdip < f xmax := by
+        sorry
+      have h₁ : ∃ p₁ ∈ Ico x₁ xmax, f p₁ = f xdip := by
+        apply intermediate_value_Ico 
+        · exact le_of_lt h_x₁_lt_xmax
+        · exact Continuous.continuousOn hf
+        · rw [h_zero_at_x.1]
+          exact ⟨h_0_le_fxdip,h_fxdip_lt_max⟩ 
+      have h₃ : ∃ p₃ ∈ Ioc xmax₂ x₂, f p₃ = f xdip := by
+        apply intermediate_value_Ioc'
+        · exact le_of_lt h_max₂_inside
+        · exact Continuous.continuousOn hf
+        · rw [h_zero_at_x.2, h_max₂]
+          exact ⟨h_0_le_fxdip,h_fxdip_lt_max⟩ 
+      obtain ⟨p₁, h_p₁, h_p₁v⟩ := h₁
+      obtain ⟨p₃, h_p₃, h_p₃v⟩ := h₃
+      use (f xdip), p₁, xdip, p₃
+      have : p₁ < xdip := gt_of_ge_of_gt h_xdip.1 h_p₁.2 
+      have : xdip < p₃ := lt_of_le_of_lt h_xdip.2 h_p₃.1
+      exact ⟨ gt_of_ge_of_gt h_xdip.1 h_p₁.2 , lt_of_le_of_lt h_xdip.2 h_p₃.1, h_p₁v, rfl, h_p₃v⟩ 
     · /- Part 4:  The case when a proper maximum is attained at xmax ∈ [x₁,x₂], and then again at some point xmax₂ beyond x₂.-/
-      sorry
-    
+      have : ∃ v : ℝ, v ∈ Ioo (0) (f xmax) := exists_between h_pos.2
+      obtain ⟨ v, hv ⟩ := this
+      have h₁: ∃ p₁ ∈ Ioo x₁ xmax, f p₁ = v := by
+        apply intermediate_value_Ioo 
+        · exact le_of_lt h_x₁_lt_xmax
+        · exact Continuous.continuousOn hf
+        · rw [← h_zero_at_x.1] at hv
+          exact hv 
+      have h₂: ∃ p₂ ∈ Ioo xmax x₂, f p₂ = v := by
+        apply intermediate_value_Ioo' 
+        · exact le_of_lt h_xmax_lt_x₂
+        · exact Continuous.continuousOn hf
+        · rw [← h_zero_at_x.2] at hv
+          exact hv 
+      have h₃: ∃ p₃ ∈ Ioo x₂ xmax₂, f p₃ = v := by
+        apply intermediate_value_Ioo
+        · exact le_of_lt h_max₂_beyond
+        · exact Continuous.continuousOn hf
+        · rw [← h_zero_at_x.2,← h_max₂] at hv
+          exact hv 
+      have h_fin : Finite (f ⁻¹'{v} ) := my_twoset_is_finite (hfib v)
+      obtain ⟨p₁, h_p₁, h_p₁v⟩ := h₁
+      obtain ⟨p₂, h_p₂, h_p₂v⟩ := h₂
+      obtain ⟨p₃, h_p₃, h_p₃v⟩ := h₃
+      use v, p₁, p₂, p₃
+      exact ⟨lt_trans h_p₁.2 h_p₂.1, lt_trans h_p₂.2 h_p₃.1, h_p₁v, h_p₂v, h_p₃v⟩ 
+  
