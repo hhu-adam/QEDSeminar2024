@@ -1,12 +1,14 @@
 import Mathlib
 
-
 open Function Set
 
 lemma my_ne_of_image_ne {A B : Type} {f : A → B } {a₁ a₂ : A} (h : f a₁ ≠ f a₂) : a₁ ≠ a₂ := by
-  exact fun a => h (congrArg f a)
-
-lemma my_twoset_is_finite {A : Type} {S : Set A} (h : ncard S = 2) : Finite S := by
+  intro ha
+  apply h
+  apply congrArg
+  assumption
+  
+lemma my_two_set_is_finite {A : Type} {S : Set A} (h : ncard S = 2) : Finite S := by
   apply finite_of_ncard_ne_zero
   rw [h]
   simp
@@ -64,9 +66,6 @@ lemma my_second_element {A : Type} {S : Set A} { a : A } (h : ncard S = 2) (ha :
       rw [hb']
       exact h_ne
 
-    
-lemma my_lt_of_lt_of_le {A : Type} [LinearOrder A] {a b c : A} (h₁ : a < b) (h₂ : b ≤ c) : a < c := by 
-  exact gt_of_ge_of_gt h₂ h₁
 
 open Real
 
@@ -86,7 +85,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     change p₁ ∈ f ⁻¹' {v} at hfp₁
     change p₂ ∈ f ⁻¹' {v} at hfp₂
     change p₃ ∈ f ⁻¹' {v} at hfp₃
-    have h_fin : Finite (f ⁻¹'{v} ) := my_twoset_is_finite (hfib v) 
+    have h_fin : Finite (f ⁻¹'{v} ) := my_two_set_is_finite (hfib v) 
     have : ncard (f ⁻¹'{v}) ≠ 2 := my_not_two_set hfp₁ hfp₂ hfp₃ h₁₂ h₂₃
     specialize hfib v
     contradiction
@@ -168,7 +167,6 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       · linarith
       · linarith
     /- Now we've finally shown that x₁ < x < x₂, and this case is almost done.-/
-    have h_fin : Finite (f ⁻¹'{0} ) := my_twoset_is_finite (hfib 0)
     use 0, x₁, x', x₂
     aesop
   · /-
@@ -228,7 +226,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
         intro y
         have : (fun x ↦ f (-x)) ⁻¹'{y} = -f⁻¹'{y} := by
           exact rfl
-        have h_fin : Finite (f ⁻¹'{y} ) := my_twoset_is_finite (hfib y) 
+        have h_fin : Finite (f ⁻¹'{y} ) := my_two_set_is_finite (hfib y) 
         rw [this, my_neg_preserves_ncard, ← hfib y]
       specialize h_wlog hf' hfib'      
       repeat rw [InvolutiveNeg.neg_neg] at h_wlog
@@ -315,28 +313,54 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
         · exact Continuous.continuousOn hf
       obtain ⟨xdip, h_xdip, h_xdip_local_min⟩ := this
       rw [isMinOn_iff] at h_xdip_local_min
+      have h_xdip' : xdip ∈ Icc x₁ x₂ := 
+        ⟨le_trans (le_of_lt h_x₁_lt_xmax) h_xdip.1,le_trans h_xdip.2 (le_of_lt h_max₂_inside) ⟩ 
       have h_0_le_fxdip : 0 ≤ f xdip := by
-        sorry        
-      have h_fxdip_lt_max : f xdip < f xmax := by
-        sorry
-      have h₁ : ∃ p₁ ∈ Ico x₁ xmax, f p₁ = f xdip := by
-        apply intermediate_value_Ico 
-        · exact le_of_lt h_x₁_lt_xmax
-        · exact Continuous.continuousOn hf
-        · rw [h_zero_at_x.1]
-          exact ⟨h_0_le_fxdip,h_fxdip_lt_max⟩ 
-      have h₃ : ∃ p₃ ∈ Ioc xmax₂ x₂, f p₃ = f xdip := by
-        apply intermediate_value_Ioc'
-        · exact le_of_lt h_max₂_inside
-        · exact Continuous.continuousOn hf
-        · rw [h_zero_at_x.2, h_max₂]
-          exact ⟨h_0_le_fxdip,h_fxdip_lt_max⟩ 
-      obtain ⟨p₁, h_p₁, h_p₁v⟩ := h₁
-      obtain ⟨p₃, h_p₃, h_p₃v⟩ := h₃
-      use (f xdip), p₁, xdip, p₃
-      have : p₁ < xdip := gt_of_ge_of_gt h_xdip.1 h_p₁.2 
-      have : xdip < p₃ := lt_of_le_of_lt h_xdip.2 h_p₃.1
-      exact ⟨ gt_of_ge_of_gt h_xdip.1 h_p₁.2 , lt_of_le_of_lt h_xdip.2 h_p₃.1, h_p₁v, rfl, h_p₃v⟩ 
+        rw [h_pos.1] at h_min_at_xmin 
+        apply h_min_at_xmin
+        rw [mem_Icc]                
+        exact h_xdip'
+      /- Once again, need to distinguish two cases:  f xdip  is equal to the maximum or not -/
+      have : f xdip = f xmax ∨ f xdip < f xmax := by
+        rw [← le_iff_eq_or_lt]
+        apply h_max_at_xmax
+        exact h_xdip'
+      obtain (h_locally_constant | h_proper_dip) := this
+      · /- "trivial" subcase when f is constant between xmax and xmax₂
+            -- essentially copied from Part 1
+        -/
+        have : ∃ x : ℝ, x ∈ Ioo xmax xmax₂ := exists_between h_xmax_lt_xmax₂
+        obtain ⟨ x , hx ⟩ := this
+        have hx' : x ∈ Ioo x₁ x₂ := by
+          constructor
+          · exact lt_trans h_x₁_lt_xmax hx.1
+          · exact lt_trans hx.2 h_max₂_inside
+        specialize h_xdip_local_min x (Ioo_subset_Icc_self hx)
+        specialize h_max_at_xmax x (Ioo_subset_Icc_self hx')
+        rw [h_locally_constant] at h_xdip_local_min
+        have : f x = f xmax := by
+          rw [eq_iff_le_not_lt, not_lt]
+          exact ⟨ h_max_at_xmax, h_xdip_local_min⟩ 
+        use (f xmax), xmax, x, xmax₂
+        aesop
+      · /- subcase when f xdip is strictly smaller than the maximum
+        -/
+        have h₁ : ∃ p₁ ∈ Ico x₁ xmax, f p₁ = f xdip := by
+          apply intermediate_value_Ico 
+          · exact le_of_lt h_x₁_lt_xmax
+          · exact Continuous.continuousOn hf
+          · rw [h_zero_at_x.1]
+            exact ⟨h_0_le_fxdip,h_proper_dip⟩ 
+        have h₃ : ∃ p₃ ∈ Ioc xmax₂ x₂, f p₃ = f xdip := by
+          apply intermediate_value_Ioc'
+          · exact le_of_lt h_max₂_inside
+          · exact Continuous.continuousOn hf
+          · rw [h_zero_at_x.2, h_max₂]
+            exact ⟨h_0_le_fxdip,h_proper_dip⟩ 
+        obtain ⟨p₁, h_p₁, h_p₁v⟩ := h₁
+        obtain ⟨p₃, h_p₃, h_p₃v⟩ := h₃
+        use (f xdip), p₁, xdip, p₃
+        exact ⟨ gt_of_ge_of_gt h_xdip.1 h_p₁.2 , lt_of_le_of_lt h_xdip.2 h_p₃.1, h_p₁v, rfl, h_p₃v⟩ 
     · /- Part 4:  The case when a proper maximum is attained at xmax ∈ [x₁,x₂], and then again at some point xmax₂ beyond x₂.-/
       have : ∃ v : ℝ, v ∈ Ioo (0) (f xmax) := exists_between h_pos.2
       obtain ⟨ v, hv ⟩ := this
@@ -358,7 +382,6 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
         · exact Continuous.continuousOn hf
         · rw [← h_zero_at_x.2,← h_max₂] at hv
           exact hv 
-      have h_fin : Finite (f ⁻¹'{v} ) := my_twoset_is_finite (hfib v)
       obtain ⟨p₁, h_p₁, h_p₁v⟩ := h₁
       obtain ⟨p₂, h_p₂, h_p₂v⟩ := h₂
       obtain ⟨p₃, h_p₃, h_p₃v⟩ := h₃
