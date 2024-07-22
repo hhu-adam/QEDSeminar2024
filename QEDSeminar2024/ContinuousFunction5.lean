@@ -118,7 +118,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     repeat rw [le_iff_lt_or_eq] at h_min_max_ineq 
     tauto  
   obtain ( h_constant | h_oscillating | h_not_oscillating ) := this
-  · /-  The trivial case when f is CONSTANT on the chosen interval  -/
+  · /-  PART 1: The trivial case when f is CONSTANT on the interval [x₁, x₂] -/
     have : ∃ x : ℝ, x ∈ Ioo x₁ x₂ := exists_between h_x₁_lt_x₂
     obtain ⟨ x , hx ⟩ := this
     specialize h_min_at_xmin x (Ioo_subset_Icc_self hx)
@@ -130,7 +130,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       exact ⟨ h_max_at_xmax, h_min_at_xmin ⟩ 
     use 0, x₁, x, x₂
     aesop
-  · /- Now for the OSCILLATING cases. -/
+  · /- PART 2: The case when f is OSCILLATING on the interval [x₁, x₂] -/
     have h_x' : ∃ x' ∈ uIcc xmin xmax, x' ∈ f⁻¹' {0} := by  -- uIoo does not seem to exist 
       apply intermediate_value_uIcc
       · exact Continuous.continuousOn hf
@@ -167,9 +167,12 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
     have h_fin : Finite (f ⁻¹'{0} ) := my_twoset_is_finite (hfib 0)
     use 0, x₁, x', x₂
     aesop
-  · /- Now the NON-OSCILLATING CASE: exactly one of {f xmin, f xmax} is ≠ 0.  -/
+  · /-
+       Now the NON-OSCILLATING CASE: exactly one of {f xmin, f xmax} is ≠ 0.  
+       We can assume WLOG that f xmax ≠ 0 -- otherwise, replace f by -f.
+    -/
     wlog h_pos : f xmin = 0 ∧ 0 < f xmax  generalizing f xmin xmax with h_wlog
-    · /- PROOF that it indeed suffices to complete the argument under the hypothesis declared by WLOG-/
+    · /- PROOF that it indeed suffices to complete the argument assuming f xmax ≠ 0 -/
       have : f xmin < 0 ∧ 0 = f xmax := h_not_oscillating h_pos
       specialize h_wlog (-f)
       have hf' : Continuous (-f) := continuous_neg_iff.mpr hf
@@ -201,8 +204,8 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       specialize h_wlog xmin h_min h_min_at_xmin'
       simp at h_wlog
       aesop
-    /- PROOF using above assumption WLOG-reduction -/
-    /- We first now construct a second point xmax₂ where f attains the value attained at xmax -/
+    /- Continuation of the proof, now assuming wlog that f xmax ≠ 0. -/
+    /- We first construct a second point xmax₂ where f attains the same value ≠ 0 as attained at xmax. -/
     clear h_not_oscillating
     have : ∃ xmax₂ ∈ f⁻¹' { f xmax }, xmax₂ ≠ xmax := by
       apply my_second_element 
@@ -210,8 +213,12 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       · exact rfl
     obtain ⟨ xmax₂, h_max₂, h_xmax_ne_xmax₂⟩ := this
     change f xmax₂ = f xmax at h_max₂
+    /- We can assume WLOG that xmax < xmax₂.
+       -- otherwise, replace f my x ↦ f(-x).
+    -/
     wlog h_xmax_lt_xmax₂ : xmax < xmax₂ generalizing f x₁ x₂ xmin xmax xmax₂ with h_wlog
-    · specialize h_wlog (-x₂) (-x₁) (neg_lt_neg_iff.mpr h_x₁_lt_x₂) (fun x ↦ f (-x))
+    · /- PROOF that it indeed suffices to complete the argument assuming xmax < xmax₂ -/
+      specialize h_wlog (-x₂) (-x₁) (neg_lt_neg_iff.mpr h_x₁_lt_x₂) (fun x ↦ f (-x))
       have hf' : Continuous fun x ↦ f (-x) := Continuous.comp' hf continuous_neg
       have hfib' : ∀ y : ℝ, ((fun x ↦ f (-x)) ⁻¹'{y}).ncard = 2 := by
         intro y
@@ -275,8 +282,19 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       obtain ⟨ v, p₁, p₂, p₃, h⟩ := h_wlog
       use v, -p₃, -p₂, -p₁ 
       aesop
+    /- Now we continue the argument, assuming wlog that xmax < xmax₂ -/
+    have h_cases : xmax₂ < x₂ ∨ x₂ < xmax₂ := by 
+      obtain (h_lt | h_eq | h_gt) := lt_trichotomy xmax₂ x₂
+      · left
+        assumption
+      · rw [← h_max₂, h_eq, h_zero_at_x.2] at h_pos
+        by_contra
+        exact lt_irrefl 0 (h_pos.2)
+      · right
+        assumption
+    obtain ( h_max₂_inside | h_max₂_beyond ) := h_cases
+    · /- PART 3:  The case when a proper maximum is attained twice within [x₁,x₂], at xmax and xmax₂. -/
+      sorry
+    · /- Part 4:  The case when a proper maximum is attained at xmax ∈ [x₁,x₂], and then again at some point xmax₂ beyond x₂.-/
+      sorry
     
-      
-    --rw [mem_Icc] at h_max  
-
-    done -- PROOF of the NON-OSCILLATING CASE, assuming WLOG taht f xmin = 0 and 0 < f xmax
