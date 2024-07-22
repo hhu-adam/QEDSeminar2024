@@ -46,8 +46,30 @@ lemma my_not_two_set {S : Set ℝ} [hSf : Finite S] {x₁ x₂ x₃ : ℝ} (h1 :
   symm at hS
   contradiction
 
+lemma my_second_element {A : Type} {S : Set A} { a : A } (h : ncard S = 2) (ha : a ∈ S) : ∃ b ∈ S, b ≠ a := by
+    apply ncard_eq_two.mp at h
+    rcases h with ⟨ a', b', h_ne, hS ⟩ 
+    rw [hS] at ha
+    rw [hS]
+    change a = a' ∨ a = b' at ha
+    rcases ha with ha' | hb'
+    · use b'
+      constructor
+      · tauto
+      rw [ha']
+      exact h_ne.symm
+    · use a'
+      constructor
+      · tauto
+      rw [hb']
+      exact h_ne
 
 open Real
+
+lemma my_neg_preserves_ncard { S : Set ℝ} [Finite S]: (-S).ncard = S.ncard := by
+  rw [← Set.image_neg]
+  rw [ncard_image_iff]
+  exact (Injective.injOn neg_injective)
 
 /- main statement -/
 
@@ -94,7 +116,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
   --  
   have : (f xmin = 0 ∧ f xmax = 0) ∨ (f xmin < 0 ∧ f xmax > 0) ∨ (¬ (f xmin = 0 ∧ 0 < f xmax) → (f xmin < 0 ∧ 0 = f xmax)) := by
     repeat rw [le_iff_lt_or_eq] at h_min_max_ineq 
-    tauto
+    tauto  
   obtain ( h_constant | h_oscillating | h_not_oscillating ) := this
   · /-  The trivial case when f is CONSTANT on the chosen interval  -/
     have : ∃ x : ℝ, x ∈ Ioo x₁ x₂ := exists_between h_x₁_lt_x₂
@@ -115,6 +137,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       · rw [mem_uIcc]
         left
         exact h_min_max_ineq
+    clear h_min_max_ineq    
     obtain ⟨ x', h_x', h_zero_at_x' ⟩ := h_x'
     /- Still need to show x₁ < x < x₂.
        Will do this by first showing x₁ < xmin < x₂ and x₁ < xmax < x₂.
@@ -178,4 +201,82 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
       specialize h_wlog xmin h_min h_min_at_xmin'
       simp at h_wlog
       aesop
-    · sorry -- PROOF of the NON-OSCILLATING CASE, assuming WLOG taht f xmin = 0 and 0 < f xmax
+    /- PROOF using above assumption WLOG-reduction -/
+    /- We first now construct a second point xmax₂ where f attains the value attained at xmax -/
+    clear h_not_oscillating
+    have : ∃ xmax₂ ∈ f⁻¹' { f xmax }, xmax₂ ≠ xmax := by
+      apply my_second_element 
+      · exact hfib (f xmax)
+      · exact rfl
+    obtain ⟨ xmax₂, h_max₂, h_xmax_ne_xmax₂⟩ := this
+    change f xmax₂ = f xmax at h_max₂
+    wlog h_xmax_lt_xmax₂ : xmax < xmax₂ generalizing f x₁ x₂ xmin xmax xmax₂ with h_wlog
+    · specialize h_wlog (-x₂) (-x₁) (neg_lt_neg_iff.mpr h_x₁_lt_x₂) (fun x ↦ f (-x))
+      have hf' : Continuous fun x ↦ f (-x) := Continuous.comp' hf continuous_neg
+      have hfib' : ∀ y : ℝ, ((fun x ↦ f (-x)) ⁻¹'{y}).ncard = 2 := by
+        intro y
+        have : (fun x ↦ f (-x)) ⁻¹'{y} = -f⁻¹'{y} := by
+          exact rfl
+        have h_fin : Finite (f ⁻¹'{y} ) := my_twoset_is_finite (hfib y) 
+        rw [this, my_neg_preserves_ncard, ← hfib y]
+      specialize h_wlog hf' hfib'      
+      repeat rw [InvolutiveNeg.neg_neg] at h_wlog
+      specialize h_wlog ⟨h_zero_at_x.2,h_zero_at_x.1⟩ 
+      have h_min' : (-xmin) ∈ Icc (-x₂) (-x₁) := by 
+        simp
+        exact ⟨h_min.2,h_min.1⟩ 
+      have h_min_at_xmin': (∀ x ∈ Icc (-x₂) (-x₁), f (-(-xmin)) ≤ f (-x)) := by
+        rw [InvolutiveNeg.neg_neg]
+        intro x hx
+        set x' := -x
+        obtain ⟨ hxx₂, hxx₁ ⟩ := mem_Icc.mpr hx
+        rw [← neg_le] at hxx₂
+        rw [le_neg] at hxx₁ 
+        change x₁ ≤ x' at hxx₁
+        change x' ≤ x₂ at hxx₂
+        have hx' : x' ∈ Icc x₁ x₂ := by
+          rw [mem_Icc]
+          exact ⟨ hxx₁, hxx₂ ⟩
+        exact h_min_at_xmin x' hx'
+      specialize h_wlog (-xmin) h_min' h_min_at_xmin'
+      have h_max' : (-xmax) ∈ Icc (-x₂) (-x₁) := by 
+        simp
+        exact ⟨h_max.2,h_max.1⟩ 
+      have h_max_at_xmax': (∀ x ∈ Icc (-x₂) (-x₁), f (-x) ≤ f (-(-xmax))) := by
+        rw [InvolutiveNeg.neg_neg]
+        intro x hx
+        set x' := -x
+        obtain ⟨ hxx₂, hxx₁ ⟩ := mem_Icc.mpr hx
+        rw [← neg_le] at hxx₂
+        rw [le_neg] at hxx₁ 
+        change x₁ ≤ x' at hxx₁
+        change x' ≤ x₂ at hxx₂
+        have hx' : x' ∈ Icc x₁ x₂ := by
+          rw [mem_Icc]
+          exact ⟨ hxx₁, hxx₂ ⟩
+        exact h_max_at_xmax x' hx'
+      specialize h_wlog (-xmax) h_max' h_max_at_xmax'
+      repeat rw [InvolutiveNeg.neg_neg] at h_wlog
+      specialize h_wlog h_min_max_ineq h_pos (-xmax₂) 
+      have h_xmax_ne_xmax₂' : -xmax₂ ≠ -xmax := by 
+        simp
+        assumption
+      specialize h_wlog h_xmax_ne_xmax₂'
+      repeat rw [InvolutiveNeg.neg_neg] at h_wlog   
+      specialize h_wlog h_max₂
+      have h_xmax'_lt_xmax₂' : -xmax < -xmax₂ := by
+        simp
+        obtain (h_lt | h_eq | h_gt)  := lt_trichotomy xmax xmax₂
+        · contradiction
+        · symm at h_eq
+          contradiction
+        · assumption
+      specialize h_wlog h_xmax'_lt_xmax₂'  
+      obtain ⟨ v, p₁, p₂, p₃, h⟩ := h_wlog
+      use v, -p₃, -p₂, -p₁ 
+      aesop
+    
+      
+    --rw [mem_Icc] at h_max  
+
+    done -- PROOF of the NON-OSCILLATING CASE, assuming WLOG taht f xmin = 0 and 0 < f xmax
