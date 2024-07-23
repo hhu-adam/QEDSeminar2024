@@ -147,8 +147,7 @@ theorem main_thm : ¬ ∃ f : ℝ → ℝ, Continuous f ∧ ∀ y : ℝ, ncard (
                     or    x₁ ≤ xmax < x < xmin ≤ x₂  (if xmax < xmin).
        So we first establish xmin ≠ x ≠ xmax.       
      -/
-    rw [mem_Icc] at h_min
-    rw [mem_Icc] at h_max
+    rw [mem_Icc] at h_min h_max
     rw [mem_uIcc] at h_x'
     rw [← h_zero_at_x'] at  h_oscillating
     have : xmin ≠ x' := my_ne_of_image_ne (ne_of_lt h_oscillating.1)
